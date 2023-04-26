@@ -39,7 +39,7 @@ jobs:
           dbfs rm dbfs:/upload/amazon-reviews/deploy_category_model.py
           dbfs rm dbfs:/upload/amazon-reviews/train_recommender.py
           dbfs rm dbfs:/upload/amazon-reviews/deploy_recommender.py
-          dbfs cp project/dist/amazon_reviews-0.0.1-py3-none-any.whl dbfs:/upload/amazon_reviews/amazon-reviews-0.0.1-py3-none-any.whl
+          dbfs cp project/dist/amazon_reviews-0.0.1-py3-none-any.whl dbfs:/upload/amazon-reviews/amazon_reviews-0.0.1-py3-none-any.whl
           dbfs cp project/category_model/train_category_model.py dbfs:/upload/amazon-reviews/train_category_model.py
           dbfs cp project/category_model/deploy_category_model.py dbfs:/upload/amazon-reviews/deploy_category_model.py
           dbfs cp project/recommender/train_recommender.py dbfs:/upload/amazon-reviews/train_recommender.py
