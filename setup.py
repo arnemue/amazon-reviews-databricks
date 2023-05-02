@@ -10,6 +10,5 @@ setup(
     author="Maria Vechtomova",
     author_email="marvelousmlops@gmail.com",
     description="Databricks serverless api deployment: amazon reviews public  dataset",
-    python_requires=">=3.6"
+    python_requires=">=3.6",
 )
-

@@ -2,7 +2,9 @@ import requests
 from amazon_reviews.api_deployment.databricks_api import databricks_host
 
 
-def retrieve_databricks_token(client_id, client_secret, tenant, lifetime=15768000) -> requests.Response:
+def retrieve_databricks_token(
+    client_id, client_secret, tenant, lifetime=15768000
+) -> requests.Response:
     """Retrieve token using MS login API
 
     Args:
@@ -25,9 +27,8 @@ def retrieve_databricks_token(client_id, client_secret, tenant, lifetime=1576800
     token = requests.post(get_token_url, data=body, headers=headers).json()
 
     token = requests.post(
-            f"https://{databricks_host()}/api/2.0/token/create",
-            headers={"Authorization": f"Bearer {token['access_token']}"},
-            json={"comment": "no comment",
-                  "lifetime_seconds": f'{lifetime}'}
-        )
-    return token.json()['token_value']
+        f"https://{databricks_host()}/api/2.0/token/create",
+        headers={"Authorization": f"Bearer {token['access_token']}"},
+        json={"comment": "no comment", "lifetime_seconds": f"{lifetime}"},
+    )
+    return token.json()["token_value"]
