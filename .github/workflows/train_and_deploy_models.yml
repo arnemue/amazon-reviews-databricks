@@ -20,18 +20,15 @@ jobs:
       - name: checkout the project repo
         id: checkout_repo
         uses: actions/checkout@v2
-        with:
-          path: "project"
 
       - name: Build wheel
         id: build_wheel
-        working-directory: "project"
         run: |
           pip install wheel
           python setup.py bdist_wheel
 
       - name: Copy files
-        id: setup_git_token
+        id: update_files
         run: |
           pip install databricks-cli
           dbfs rm dbfs:/upload/amazon_reviews/amazon-reviews-0.0.1-py3-none-any.whl
@@ -39,18 +36,17 @@ jobs:
           dbfs rm dbfs:/upload/amazon-reviews/deploy_category_model.py
           dbfs rm dbfs:/upload/amazon-reviews/train_recommender.py
           dbfs rm dbfs:/upload/amazon-reviews/deploy_recommender.py
-          dbfs cp project/dist/amazon_reviews-0.0.1-py3-none-any.whl dbfs:/upload/amazon-reviews/amazon_reviews-0.0.1-py3-none-any.whl
-          dbfs cp project/category_model/train_category_model.py dbfs:/upload/amazon-reviews/train_category_model.py
-          dbfs cp project/category_model/deploy_category_model.py dbfs:/upload/amazon-reviews/deploy_category_model.py
-          dbfs cp project/recommender/train_recommender.py dbfs:/upload/amazon-reviews/train_recommender.py
-          dbfs cp project/recommender/deploy_recommender.py dbfs:/upload/amazon-reviews/deploy_recommender.py
+          dbfs cp dist/amazon_reviews-0.0.1-py3-none-any.whl dbfs:/upload/amazon-reviews/amazon_reviews-0.0.1-py3-none-any.whl
+          dbfs cp category_model/train_category_model.py dbfs:/upload/amazon-reviews/train_category_model.py
+          dbfs cp category_model/deploy_category_model.py dbfs:/upload/amazon-reviews/deploy_category_model.py
+          dbfs cp recommender/train_recommender.py dbfs:/upload/amazon-reviews/train_recommender.py
+          dbfs cp recommender/deploy_recommender.py dbfs:/upload/amazon-reviews/deploy_recommender.py
 
-      - name: Jinja format job deployment
-        id: jinja_format_job_deployment # fill in GIT_SHA and DATABRICKS_HOST
+      - name: Substitute variables within job deployments
+        id: substitute_vars # fill in GIT_SHA and DATABRICKS_HOST
         run: |
-          pip install jinja2-cli
-          jinja2 -D GIT_SHA="${GIT_SHA}" -D DATABRICKS_HOST="${DATABRICKS_HOST}" project/category_model/category_model.json.j2 > project/category_model/category_model.json
-          jinja2 -D GIT_SHA="${GIT_SHA}" -D DATABRICKS_HOST="${DATABRICKS_HOST}" project/recommender/recommender.json.j2 > project/recommender/recommender.json
+          envsubst  < category_model/category_model_template.json > category_model/category_model.json
+          envsubst  < recommender/recommender_template.json > recommender/recommender.json
 
       - name: Deploy databricks job
         id: deploy_databricks_job
@@ -60,15 +56,15 @@ jobs:
           recom_job_id=$(databricks jobs list --output json | jq '.jobs[] | select(.settings.name == "Amazon recommender model: train and serve") | .job_id')
           if [ -z "$cat_job_id" ]
           then
-            cat_job_id=$(databricks jobs create --json-file project/category_model/category_model.json | jq .job_id --raw-output)
+            cat_job_id=$(databricks jobs create --json-file category_model/category_model.json | jq .job_id --raw-output)
           else
-            databricks jobs reset --job-id $cat_job_id --json-file project/category_model/category_model.json
+            databricks jobs reset --job-id $cat_job_id --json-file category_model/category_model.json
           fi
           if [ -z "$recom_job_id" ]
           then
-            recom_job_id=$(databricks jobs create --json-file project/recommender/recommender.json | jq .job_id --raw-output)
+            recom_job_id=$(databricks jobs create --json-file recommender/recommender.json | jq .job_id --raw-output)
           else
-            databricks jobs reset --job-id $recom_job_id --json-file project/recommender/recommender.json
+            databricks jobs reset --job-id $recom_job_id --json-file recommender/recommender.json
           fi
           databricks jobs run-now --job-id $cat_job_id
           databricks jobs run-now --job-id $recom_job_id

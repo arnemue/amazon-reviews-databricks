@@ -127,3 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+recommender/recommender.json
+category_model/category_model.json
